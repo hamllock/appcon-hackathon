@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import cv2
 import pytesseract
 import numpy as np
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for cross-origin requests
 
 # Function to perform OCR
 def ocr_image(image):
@@ -39,4 +41,4 @@ def ocr_api():
     return jsonify({"extracted_text": extracted_text})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

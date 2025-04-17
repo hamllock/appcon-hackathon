@@ -29,8 +29,9 @@ export default function ImageOCR() {
       headerBackVisible: false,
     });
     (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasCameraPermission(status === "granted");
+      const cameraStatus = await Camera.requestCameraPermissionsAsync();
+      const mediaStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      setHasCameraPermission(cameraStatus.status === "granted" && mediaStatus.status === "granted");
     })();
   }, [navigation]);
 
@@ -40,7 +41,7 @@ export default function ImageOCR() {
       return;
     }
     if (hasCameraPermission === false) {
-      Alert.alert("Permission Error", "Camera access was denied.");
+      Alert.alert("Permission Error", "Camera and/or media library access was denied.");
       return;
     }
 
@@ -76,7 +77,8 @@ export default function ImageOCR() {
         method: "POST",
         body: formData,
         headers: {
-          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+          // Note: 'Content-Type' is set automatically by FormData
         },
       });
 
