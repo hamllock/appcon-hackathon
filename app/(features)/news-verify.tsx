@@ -9,6 +9,9 @@ import {
   Button,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 export default function NewsVerification() {
@@ -80,47 +83,60 @@ export default function NewsVerification() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.description}>
-          Fill in details about the news article to verify if it's real or fakess.
-        </Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={true}
+        >
+          <View style={styles.content}>
+            <Text style={styles.description}>
+              Fill in details about the news article to verify if it's real or fake.
+            </Text>
 
-        <Text style={styles.label}>Content</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter news content"
-          multiline
-          value={content}
-          onChangeText={setContent}
-        />
+            <Text style={styles.label}>Content</Text>
+            <TextInput
+              style={styles.contentInput}
+              placeholder="Enter news content"
+              multiline
+              value={content}
+              onChangeText={setContent}
+              textAlignVertical="top"
+            />
 
-        <Text style={styles.label}>Source</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter news source"
-          value={source}
-          onChangeText={setSource}
-        />
+            <Text style={styles.label}>Source</Text>
+            <TextInput
+              style={styles.sourceInput}
+              placeholder="Enter news source"
+              value={source}
+              onChangeText={setSource}
+            />
 
-        <View style={styles.buttonContainer}>
-          <Button
-            title={isLoading ? "Processing..." : "Send"}
-            onPress={handleSend}
-            color="#007BFF"
-            disabled={isLoading}
-          />
-          <Button
-            title="Clear"
-            onPress={handleClear}
-            color="#FF3B30"
-            disabled={isLoading}
-          />
-        </View>
+            <View style={styles.buttonContainer}>
+              <Button
+                title={isLoading ? "Processing..." : "Send"}
+                onPress={handleSend}
+                color="#007BFF"
+                disabled={isLoading}
+              />
+              <Button
+                title="Clear"
+                onPress={handleClear}
+                color="#FF3B30"
+                disabled={isLoading}
+              />
+            </View>
 
-        {isLoading && (
-          <ActivityIndicator size="large" color="#007BFF" style={styles.loader} />
-        )}
-      </View>
+            {isLoading && (
+              <ActivityIndicator size="large" color="#007BFF" style={styles.loader} />
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -129,6 +145,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f7",
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40, // Increased padding to ensure buttons are reachable
   },
   content: {
     padding: 20,
@@ -144,7 +167,18 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginTop: 15,
   },
-  input: {
+  contentInput: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    minHeight: 100,
+    maxHeight: 300, // Limit max height to prevent overwhelming the screen
+    textAlignVertical: "top",
+  },
+  sourceInput: {
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ccc",
@@ -157,8 +191,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+    marginBottom: 20, // Ensure buttons have space below
   },
   loader: {
     marginTop: 20,
+    marginBottom: 20,
   },
 });
