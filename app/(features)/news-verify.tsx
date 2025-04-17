@@ -18,7 +18,7 @@ export default function NewsVerification() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Configure API URL (replace with your actual API URL or use environment variable)
-  const API_URL = "http://127.0.0.1:5000/predict"; // Consider using env variables for production
+  const API_URL = "http://192.168.1.4:5000/predict"; // Consider using env variables for production
 
   useLayoutEffect(() => {
     navigation.setOptions({
