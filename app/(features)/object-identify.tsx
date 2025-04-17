@@ -17,16 +17,15 @@ export default function ImageOCR() {
   const navigation = useNavigation();
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [imageUri, setImageUri] = useState(null);
-  const [extractedText, setExtractedText] = useState("");
   const [detectedLabels, setDetectedLabels] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Configure API URL (replace with your server’s IP or ngrok URL)
-  const API_URL = "http://192.168.1.4:5000/process_image"; // Updated to match Flask endpoint
+  const API_URL = "http://192.168.1.4:5000/process_image"; // Matches Flask endpoint
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Image OCR & Object Detection",
+      title: "Object Detection",
       headerBackVisible: false,
     });
     (async () => {
@@ -54,7 +53,6 @@ export default function ImageOCR() {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setExtractedText(""); // Clear previous text
       setDetectedLabels([]); // Clear previous labels
     }
   };
@@ -99,7 +97,6 @@ export default function ImageOCR() {
         return;
       }
 
-      setExtractedText(data.ocr_text || "No text detected.");
       setDetectedLabels(data.yolo_labels || []);
     } catch (error) {
       console.error("Fetch error:", error.message, error.stack);
@@ -114,15 +111,31 @@ export default function ImageOCR() {
 
   const handleClear = () => {
     setImageUri(null);
-    setExtractedText("");
     setDetectedLabels([]);
+  };
+
+  // Function to format detected labels into counts
+  const formatLabelCounts = (labels) => {
+    if (!labels || labels.length === 0) return ["No objects detected."];
+
+    // Count occurrences of each label
+    const labelCounts = labels.reduce((acc, label) => {
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Format each label count
+    return Object.entries(labelCounts).map(([label, count]) => {
+      const plural = count > 1 ? "s" : "";
+      return `${count} ${label}${plural} detected`;
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.description}>
-          Take a picture to extract text and detect objects.
+          Take a picture to detect objects in the image.
         </Text>
 
         <View style={styles.buttonContainer}>
@@ -133,7 +146,7 @@ export default function ImageOCR() {
             disabled={isLoading}
           />
           <Button
-            title="Process Image"
+            title="Detect Objects"
             onPress={handleSend}
             color="#007BFF"
             disabled={isLoading || !imageUri}
@@ -142,7 +155,7 @@ export default function ImageOCR() {
             title="Clear"
             onPress={handleClear}
             color="#FF3B30"
-            disabled={isLoading || (!imageUri && !extractedText && detectedLabels.length === 0)}
+            disabled={isLoading || (!imageUri && detectedLabels.length === 0)}
           />
         </View>
 
@@ -155,22 +168,13 @@ export default function ImageOCR() {
         )}
 
         <ScrollView style={styles.textContainer}>
-          {extractedText ? (
-            <>
-              <Text style={styles.label}>Extracted Text:</Text>
-              <Text style={styles.extractedText}>{extractedText}</Text>
-            </>
-          ) : (
-            <Text style={styles.status}>No text extracted yet.</Text>
-          )}
-
           {detectedLabels.length > 0 ? (
             <>
               <Text style={styles.label}>Detected Objects:</Text>
               <View style={styles.labelsContainer}>
-                {detectedLabels.map((label, index) => (
+                {formatLabelCounts(detectedLabels).map((formattedLabel, index) => (
                   <Text key={index} style={styles.labelItem}>
-                    {label}
+                    {formattedLabel}
                   </Text>
                 ))}
               </View>
@@ -221,15 +225,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 5,
     marginTop: 10,
-  },
-  extractedText: {
-    fontSize: 16,
-    color: "#000",
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
   },
   labelsContainer: {
     backgroundColor: "#fff",
