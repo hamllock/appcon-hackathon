@@ -6,11 +6,19 @@ import {
   StyleSheet,
   SafeAreaView,
   TextInput,
-  TouchableOpacity,
+  Button,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 
 export default function NewsVerification() {
   const navigation = useNavigation();
+  const [content, setContent] = useState("");
+  const [source, setSource] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Configure API URL (replace with your actual API URL or use environment variable)
+  const API_URL = "http://127.0.0.1:5000/predict"; // Consider using env variables for production
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -19,52 +27,99 @@ export default function NewsVerification() {
     });
   }, [navigation]);
 
-  const [content, setContent] = useState("");
-  const [source, setSource] = useState("");
+  const handleSend = async () => {
+    if (!content || !source) {
+      Alert.alert("Missing Fields", "Please fill in both Content and Source.");
+      return;
+    }
 
-  const handleSend = () => {
-    console.log("Sending...");
-    console.log("Content:", content);
-    console.log("Source:", source);
-    // TODO: Add backend/API call here
+    setIsLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content, brand: source }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Server responded with error:", data.error);
+        Alert.alert("Server Error", data.error || "Something went wrong.");
+        return;
+      }
+
+      if (data.status !== "success") {
+        Alert.alert("Prediction Failed", "Could not generate prediction.");
+        return;
+      }
+
+      const predictions = data.predictions;
+      const formatted = Object.entries(predictions)
+        .map(([model, result]) => `${model}: ${result}`)
+        .join("\n");
+
+      Alert.alert("Predictions", formatted);
+    } catch (error) {
+      console.error("Fetch failed:", error);
+      Alert.alert(
+        "Connection Error",
+        "Could not connect to the server. Please check your network and server status."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setContent("");
+    setSource("");
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>News Verification</Text>
         <Text style={styles.description}>
-          Fill in details about the news article to verify if it's real or fake.
+          Fill in details about the news article to verify if it's real or fakess.
         </Text>
 
-        {/* Content Input */}
         <Text style={styles.label}>Content</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter the news content"
+          placeholder="Enter news content"
+          multiline
           value={content}
           onChangeText={setContent}
-          multiline
         />
 
-        {/* Source Input */}
         <Text style={styles.label}>Source</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter the source"
+          placeholder="Enter news source"
           value={source}
           onChangeText={setSource}
         />
 
-        {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-
-        {/* Placeholder */}
-        <View style={styles.placeholderForm}>
-          <Text style={styles.placeholderText}>Form coming soon</Text>
+        <View style={styles.buttonContainer}>
+          <Button
+            title={isLoading ? "Processing..." : "Send"}
+            onPress={handleSend}
+            color="#007BFF"
+            disabled={isLoading}
+          />
+          <Button
+            title="Clear"
+            onPress={handleClear}
+            color="#FF3B30"
+            disabled={isLoading}
+          />
         </View>
+
+        {isLoading && (
+          <ActivityIndicator size="large" color="#007BFF" style={styles.loader} />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -78,55 +133,32 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
-  },
   description: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
     color: "#333",
-    marginBottom: 8,
-    marginTop: 12,
+    marginBottom: 5,
+    marginTop: 15,
   },
   input: {
     backgroundColor: "#fff",
-    borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
     fontSize: 16,
-    marginBottom: 10,
+    minHeight: 60,
   },
-  sendButton: {
-    backgroundColor: "#4A6FFF",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 20,
   },
-  sendButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  placeholderForm: {
-    backgroundColor: "#e0e0e0",
-    borderRadius: 10,
-    padding: 40,
-    alignItems: "center",
-    justifyContent: "center",
+  loader: {
     marginTop: 20,
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: "#888",
   },
 });
