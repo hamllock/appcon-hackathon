@@ -127,7 +127,7 @@ export default function ImageOCR() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.description}>
-          Take a picture to extract text using OCR.
+          Take a picture to identify the wound.
         </Text>
 
         <View style={styles.buttonContainer}>
