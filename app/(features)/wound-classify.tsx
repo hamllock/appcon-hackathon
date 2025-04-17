@@ -18,7 +18,7 @@ export default function ImageOCR() {
   const navigation = useNavigation();
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [imageUri, setImageUri] = useState(null);
-  const [extractedText, setExtractedText] = useState("");
+  const [woundData, setWoundData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Configure API URL
@@ -54,7 +54,7 @@ export default function ImageOCR() {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setExtractedText(""); // Clear previous text
+      setWoundData(null); // Clear previous data
     }
   };
 
@@ -97,11 +97,22 @@ export default function ImageOCR() {
         return;
       }
 
-      const text = data.extracted_text || "No text detected.";
-      setExtractedText(text);
+      setWoundData(data);
 
-      // Use TTS to read the extracted text
-      Speech.speak(text, {
+      // Prepare text for TTS
+      let ttsText = data.message;
+      if (data.detected_wounds && data.detected_wounds.length > 0) {
+        ttsText += " Detected wounds: ";
+        data.detected_wounds.forEach((wound, index) => {
+          ttsText += `${wound.wound_type}. Definition: ${wound.definition}. First aid: ${wound.first_aid.join(" ")}`;
+          if (index < data.detected_wounds.length - 1) {
+            ttsText += "; ";
+          }
+        });
+      }
+
+      // Use TTS to read the response
+      Speech.speak(ttsText, {
         language: "en",
         pitch: 1.0,
         rate: 1.0,
@@ -119,7 +130,7 @@ export default function ImageOCR() {
 
   const handleClear = () => {
     setImageUri(null);
-    setExtractedText("");
+    setWoundData(null);
     Speech.stop(); // Stop any ongoing speech
   };
 
@@ -147,7 +158,7 @@ export default function ImageOCR() {
             title="Clear"
             onPress={handleClear}
             color="#FF3B30"
-            disabled={isLoading || (!imageUri && !extractedText)}
+            disabled={isLoading || (!imageUri && !woundData)}
           />
         </View>
 
@@ -159,13 +170,32 @@ export default function ImageOCR() {
           <Text style={styles.status}>Image selected. Ready to send.</Text>
         )}
 
-        {extractedText ? (
+        {woundData ? (
           <ScrollView style={styles.textContainer}>
-            <Text style={styles.label}>Extracted Text:</Text>
-            <Text style={styles.extractedText}>{extractedText}</Text>
+            <Text style={styles.label}>Detection Result:</Text>
+            <Text style={styles.message}>{woundData.message}</Text>
+            {woundData.detected_wounds && woundData.detected_wounds.length > 0 && (
+              <>
+                <Text style={styles.subLabel}>Detected Wounds:</Text>
+                {woundData.detected_wounds.map((wound, index) => (
+                  <View key={index} style={styles.woundContainer}>
+                    <Text style={styles.woundType}>{wound.wound_type}</Text>
+                    <Text style={styles.definition}>
+                      Definition: {wound.definition}
+                    </Text>
+                    <Text style={styles.firstAidLabel}>First Aid:</Text>
+                    {wound.first_aid.map((step, idx) => (
+                      <Text key={idx} style={styles.firstAidStep}>
+                        • {step}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </>
+            )}
           </ScrollView>
         ) : (
-          <Text style={styles.status}>No text extracted yet.</Text>
+          <Text style={styles.status}>No wounds detected yet.</Text>
         )}
       </View>
     </SafeAreaView>
@@ -208,8 +238,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginBottom: 5,
+    fontWeight: "bold",
   },
-  extractedText: {
+  subLabel: {
+    fontSize: 14,
+    color: "#333",
+    marginTop: 10,
+    marginBottom: 5,
+    fontWeight: "bold",
+  },
+  message: {
     fontSize: 16,
     color: "#000",
     backgroundColor: "#fff",
@@ -217,5 +255,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ccc",
+    marginBottom: 10,
+  },
+  woundContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 10,
+  },
+  woundType: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#007BFF",
+    marginBottom: 5,
+  },
+  definition: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 5,
+  },
+  firstAidLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 5,
+    marginBottom: 5,
+  },
+  firstAidStep: {
+    fontSize: 14,
+    color: "#333",
+    marginLeft: 10,
   },
 });

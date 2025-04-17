@@ -7,7 +7,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the pre-trained YOLOv8 model
-model = YOLO('appcon-hackathon/model_weights/best.pt')  # YOLOv8 model
+model = YOLO('model_weights/best.pt')  # YOLOv8 model
 
 @app.route('/wound', methods=['POST'])
 def ocr():

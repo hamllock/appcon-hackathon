@@ -209,6 +209,71 @@ def process_image():
         logger.error(f"Server error in /process_image: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+# First aid information for wounds
+FIRST_AID = {
+    "Abrasion": {
+        "definition": "Surface-level skin injury (e.g., from falling on rough ground).",
+        "first_aid": [
+            "Wash hands or wear gloves.",
+            "Rinse the wound with clean water to remove dirt.",
+            "Gently clean around the wound with soap and water (avoid scrubbing).",
+            "Apply an antibiotic ointment (like Neosporin).",
+            "Cover with a clean, non-stick bandage.",
+            "Change the dressing daily or if it becomes dirty/wet."
+        ]
+    },
+    "Bruise": {
+        "definition": "Bleeding under the skin due to impact. No skin break.",
+        "first_aid": [
+            "Apply a cold compress/ice pack (wrapped in cloth) for 10–20 minutes to reduce swelling.",
+            "Elevate the area if possible.",
+            "Rest the bruised area.",
+            "Avoid heat for the first 24 hours.",
+            "Monitor for signs of severe injury (pain/swelling that worsens, difficulty moving limb)."
+        ]
+    },
+    "Burn": {
+        "definition": "Skin injury caused by heat, classified by severity.",
+        "first_aid": [
+            "For First Degree (Red, No Blisters): Cool burn under running water for 10–15 minutes, apply aloe vera or burn cream, cover with a sterile non-stick bandage.",
+            "For Second Degree (Blisters, More Painful): Cool under water for 10–15 minutes, do not pop blisters, apply antibiotic ointment, cover with a clean, loose bandage, seek medical help if large or on face/genitals/hands.",
+            "For Third Degree (Charred/Waxy Skin, Numb): Call emergency services immediately, do not remove burned clothing, cover with a cool, moist sterile cloth or clean sheet, monitor breathing."
+        ]
+    },
+    "Cut": {
+        "definition": "Clean slice through skin, often by a sharp object.",
+        "first_aid": [
+            "Wash hands/wear gloves.",
+            "Apply pressure with a clean cloth/gauze to stop bleeding.",
+            "Clean wound gently with water (no hydrogen peroxide).",
+            "Apply antibiotic ointment.",
+            "Cover with a sterile bandage.",
+            "Get medical help if deep, won’t stop bleeding, or gaping."
+        ]
+    },
+    "Laceration": {
+        "definition": "Jagged or deep tear in the skin.",
+        "first_aid": [
+            "Apply direct pressure to stop bleeding.",
+            "Clean the wound gently if possible.",
+            "Apply sterile bandage or clean cloth.",
+            "Keep the area elevated if bleeding heavily.",
+            "Seek medical attention (stitches may be needed)."
+        ]
+    },
+    "Stab Wound": {
+        "definition": "Deep penetrating wound from sharp object (knife, etc.).",
+        "first_aid": [
+            "Call emergency services immediately.",
+            "Do NOT remove the object if it's still in the body.",
+            "Apply pressure around the wound to control bleeding (not directly on the object).",
+            "If object is removed or not present, control bleeding with direct pressure and clean dressing.",
+            "Lay the person down and keep them calm.",
+            "Monitor for signs of shock: pale skin, rapid heartbeat, shallow breathing."
+        ]
+    }
+}
+
 # /wound endpoint: Wound detection using YOLO
 @app.route('/wound', methods=['POST'])
 def wound_detection():
@@ -233,18 +298,45 @@ def wound_detection():
         img_resized = cv2.resize(img, (640, 640))
         results = wound_model(img_resized)
         
-        # Extract labels from YOLO detections
-        labels = []
+        # Map predicted class names to standardized names
+        class_mapping = {
+            "Otarcie": "Abrasion",
+            "Laseration": "Laceration",
+            "Rana kluta": "Stab Wound",
+            "Bruises": "Bruise",
+            "Burn": "Burn",
+            "Cut": "Cut"
+        }
+        
+        # Extract unique labels from YOLO detections
+        labels = set()
         for detection in results[0].boxes:
             class_idx = int(detection.cls[0])  # Class index
             label = wound_model.names[class_idx]  # Class name
-            labels.append(label)
+            # Map to standardized name if applicable
+            standardized_label = class_mapping.get(label, label)
+            labels.add(standardized_label)
         
-        # Join labels into a single string
-        extracted_text = " ".join(labels) if labels else "No wounds detected."
+        # Prepare response with unique labels and first aid
+        response = {
+            "detected_wounds": [],
+            "message": "No wounds detected." if not labels else f"Detected {len(labels)} unique wound type(s)."
+        }
         
-        logger.info(f"Wound detection completed: {extracted_text}")
-        return jsonify({"extracted_text": extracted_text})
+        if labels:
+            for label in labels:
+                wound_info = FIRST_AID.get(label, {
+                    "definition": "Unknown wound type.",
+                    "first_aid": ["Seek medical attention."]
+                })
+                response["detected_wounds"].append({
+                    "wound_type": label,
+                    "definition": wound_info["definition"],
+                    "first_aid": wound_info["first_aid"]
+                })
+        
+        logger.info(f"Wound detection completed: {response['message']}")
+        return jsonify(response)
     
     except Exception as e:
         logger.error(f"Server error in /wound: {str(e)}")
