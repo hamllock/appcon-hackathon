@@ -6,7 +6,7 @@ export default function FeaturesLayout() {
       <Stack.Screen
         name="news-verify"
         options={{
-          headerTitle: "News Verifications",
+          headerTitle: "News Verification",
           headerBackTitle: "Back",
         }}
       />
