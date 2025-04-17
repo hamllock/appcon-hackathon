@@ -7,10 +7,10 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the pre-trained YOLOv8 model
-model = YOLO('best.pt')  # YOLOv8 model
+model = YOLO('appcon-hackathon/model_weights/best.pt')  # YOLOv8 model
 
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.route('/wound', methods=['POST'])
+def ocr():
     # Get the image file from the request
     if 'image' not in request.files:
         return jsonify({"error": "No image file found in the request"}), 400
@@ -27,21 +27,18 @@ def predict():
     # Run YOLOv8 model predictions on the image
     results = model(img_resized)
     
-    # Extract annotations
-    annotations = []
+    # Extract labels as "extracted text"
+    labels = []
     for detection in results[0].boxes:
-        box = detection.xyxy[0].cpu().numpy()  # Bounding box coordinates [x_min, y_min, x_max, y_max]
         class_idx = int(detection.cls[0])  # Class index
         label = model.names[class_idx]  # Class name
-        score = float(detection.conf[0])  # Confidence score
-        annotations.append({
-            'label': label,
-            'confidence': score,
-            'bbox': box.tolist()  # Convert bbox to list to make it JSON serializable
-        })
+        labels.append(label)
     
-    # Return annotations as JSON response
-    return jsonify(annotations)
+    # Join labels into a single string
+    extracted_text = " ".join(labels) if labels else "No wounds detected."
+    
+    # Return extracted text as JSON response
+    return jsonify({"extracted_text": extracted_text})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='192.168.1.4', port=5000, debug=True)

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import * as Speech from "expo-speech";
 
 export default function ImageOCR() {
   const navigation = useNavigation();
@@ -20,8 +21,8 @@ export default function ImageOCR() {
   const [extractedText, setExtractedText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Configure API URL (replace with your server’s IP or ngrok URL)
-  const API_URL = "http://192.168.1.4:5000/ocr"; // Update as needed
+  // Configure API URL
+  const API_URL = "http://192.168.1.4:5000/wound";
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -78,7 +79,6 @@ export default function ImageOCR() {
         body: formData,
         headers: {
           Accept: "application/json",
-          // Note: 'Content-Type' is set automatically by FormData
         },
       });
 
@@ -97,7 +97,15 @@ export default function ImageOCR() {
         return;
       }
 
-      setExtractedText(data.extracted_text || "No text detected.");
+      const text = data.extracted_text || "No text detected.";
+      setExtractedText(text);
+
+      // Use TTS to read the extracted text
+      Speech.speak(text, {
+        language: "en",
+        pitch: 1.0,
+        rate: 1.0,
+      });
     } catch (error) {
       console.error("Fetch error:", error.message, error.stack);
       Alert.alert(
@@ -112,6 +120,7 @@ export default function ImageOCR() {
   const handleClear = () => {
     setImageUri(null);
     setExtractedText("");
+    Speech.stop(); // Stop any ongoing speech
   };
 
   return (

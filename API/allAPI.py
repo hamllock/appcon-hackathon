@@ -36,9 +36,17 @@ except Exception as e:
 # Load the pre-trained YOLOv8 model for /process_image endpoint
 try:
     yolo_model = YOLO('appcon-hackathon/model_weights/yolov8n.pt')  # YOLOv8 model
-    logger.info("YOLO model loaded successfully")
+    logger.info("YOLO model for object detection loaded successfully")
 except Exception as e:
-    logger.error(f"Failed to load YOLO model: {str(e)}")
+    logger.error(f"Failed to load YOLO model for object detection: {str(e)}")
+    raise
+
+# Load the pre-trained YOLOv8 model for /wound endpoint
+try:
+    wound_model = YOLO('appcon-hackathon/model_weights/best.pt')  # YOLOv8 model for wound detection
+    logger.info("YOLO model for wound detection loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to load YOLO model for wound detection: {str(e)}")
     raise
 
 # Preprocessing function for /predict endpoint
@@ -199,6 +207,47 @@ def process_image():
     
     except Exception as e:
         logger.error(f"Server error in /process_image: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# /wound endpoint: Wound detection using YOLO
+@app.route('/wound', methods=['POST'])
+def wound_detection():
+    try:
+        # Check if an image is provided in the request
+        if 'image' not in request.files:
+            logger.warning("No image file found in request for /wound")
+            return jsonify({"error": "No image file found in the request"}), 400
+        
+        # Get the image file from the request
+        file = request.files['image']
+        
+        # Convert image to numpy array for OpenCV
+        img_array = np.frombuffer(file.read(), np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        if img is None:
+            logger.error("Failed to decode image for /wound")
+            return jsonify({"error": "Invalid image file"}), 400
+        
+        # Perform YOLO wound detection
+        logger.debug("Performing YOLO wound detection")
+        img_resized = cv2.resize(img, (640, 640))
+        results = wound_model(img_resized)
+        
+        # Extract labels from YOLO detections
+        labels = []
+        for detection in results[0].boxes:
+            class_idx = int(detection.cls[0])  # Class index
+            label = wound_model.names[class_idx]  # Class name
+            labels.append(label)
+        
+        # Join labels into a single string
+        extracted_text = " ".join(labels) if labels else "No wounds detected."
+        
+        logger.info(f"Wound detection completed: {extracted_text}")
+        return jsonify({"extracted_text": extracted_text})
+    
+    except Exception as e:
+        logger.error(f"Server error in /wound: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
