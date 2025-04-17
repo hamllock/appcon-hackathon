@@ -1,0 +1,7 @@
+HOW TO USE:
+
+1. install all requirements in python env by using the python_requirements.txt
+2. install expo go from the playstore
+3. run the allAPI.py
+5. in the git bash commandline type npx expo start
+6. scan the qr using expo go
