@@ -53,9 +53,9 @@ export default function Dashboard() {
 
   const navigateToFeature = (featureId: string) => {
     console.log(`Navigating to ${featureId}`);
-    //TODO: fix whatever this is
-    //router.push(`/(features)/${featureId}`);
+    router.push(`/(features)/${featureId}`);
   };
+  
 
   const renderIcon = (feature: any) => {
     if (feature.iconType === "MaterialCommunity") {
@@ -75,7 +75,7 @@ export default function Dashboard() {
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f7" />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Utility Assistant</Text>
+        <Text style={styles.headerTitle}>VitalHub</Text>
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={() => router.push("/settings")}
