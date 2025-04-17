@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { speak, stop } from "expo-speech";
 
-export default function ImageOCR() {
+export default function ObjectDetection() {
   const navigation = useNavigation();
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [imageUri, setImageUri] = useState(null);
@@ -78,13 +79,22 @@ export default function ImageOCR() {
         body: formData,
         headers: {
           Accept: "application/json",
-          // Note: 'Content-Type' is set automatically by FormData
         },
       });
 
       console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError.message);
+        throw new Error("Invalid server response");
+      }
+
+      console.log("Parsed response data:", data);
 
       if (!response.ok) {
         console.error("Server error:", data.error);
@@ -97,7 +107,17 @@ export default function ImageOCR() {
         return;
       }
 
-      setDetectedLabels(data.yolo_labels || []);
+      const labels = data.yolo_labels || [];
+      setDetectedLabels(labels);
+
+      // Speak the formatted label counts
+      const formattedLabels = formatLabelCounts(labels);
+      const speechText = formattedLabels.length > 0 ? formattedLabels.join(". ") : "No objects detected.";
+      speak(speechText, {
+        language: "en-US",
+        pitch: 1.0,
+        rate: 0.9,
+      });
     } catch (error) {
       console.error("Fetch error:", error.message, error.stack);
       Alert.alert(
@@ -112,6 +132,7 @@ export default function ImageOCR() {
   const handleClear = () => {
     setImageUri(null);
     setDetectedLabels([]);
+    stop(); // Stop any ongoing speech
   };
 
   // Function to format detected labels into counts

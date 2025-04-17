@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import * as Speech from "expo-speech";
 
 export default function ImageOCR() {
   const navigation = useNavigation();
@@ -19,6 +20,7 @@ export default function ImageOCR() {
   const [imageUri, setImageUri] = useState(null);
   const [extractedText, setExtractedText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Configure API URL (replace with your server’s IP or ngrok URL)
   const API_URL = "http://192.168.1.4:5000/ocr"; // Update as needed
@@ -78,7 +80,6 @@ export default function ImageOCR() {
         body: formData,
         headers: {
           Accept: "application/json",
-          // Note: 'Content-Type' is set automatically by FormData
         },
       });
 
@@ -112,6 +113,23 @@ export default function ImageOCR() {
   const handleClear = () => {
     setImageUri(null);
     setExtractedText("");
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    }
+  };
+
+  const speakText = () => {
+    if (extractedText && !isSpeaking) {
+      setIsSpeaking(true);
+      Speech.speak(extractedText, {
+        onDone: () => setIsSpeaking(false),
+        onError: () => {
+          setIsSpeaking(false);
+          Alert.alert("Speech Error", "Failed to read the text aloud.");
+        },
+      });
+    }
   };
 
   return (
@@ -139,6 +157,15 @@ export default function ImageOCR() {
             onPress={handleClear}
             color="#FF3B30"
             disabled={isLoading || (!imageUri && !extractedText)}
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <Button
+            title={isSpeaking ? "Speaking..." : "Read Aloud"}
+            onPress={speakText}
+            color="#28A745"
+            disabled={isLoading || !extractedText || isSpeaking}
           />
         </View>
 
