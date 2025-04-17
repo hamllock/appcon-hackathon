@@ -26,7 +26,7 @@ export default function ImageOCR() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Image OCR",
+      title: "Wound Detector",
       headerBackVisible: false,
     });
     (async () => {
@@ -93,7 +93,7 @@ export default function ImageOCR() {
       }
 
       if (data.error) {
-        Alert.alert("OCR Failed", data.error);
+        Alert.alert("Detection Failed", data.error);
         return;
       }
 
@@ -138,7 +138,7 @@ export default function ImageOCR() {
             disabled={isLoading}
           />
           <Button
-            title="Send to OCR"
+            title="Send to Wound Detector"
             onPress={handleSend}
             color="#007BFF"
             disabled={isLoading || !imageUri}

@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 # Load pre-trained models and vectorizer for /predict endpoint
 try:
     models = {
-        "Logistic_Regression": joblib.load("appcon-hackathon/model_weights/Logistic_Regression.pkl"),
-        "Naive_Bayes": joblib.load("appcon-hackathon/model_weights/Naive_Bayes.pkl"),
-        "SVM": joblib.load("appcon-hackathon/model_weights/SVM.pkl"),
-        "XGBoost": joblib.load("appcon-hackathon/model_weights/XGBoost.pkl")
+        "Logistic_Regression": joblib.load("model_weights/Logistic_Regression.pkl"),
+        "Naive_Bayes": joblib.load("model_weights/Naive_Bayes.pkl"),
+        "SVM": joblib.load("model_weights/SVM.pkl"),
+        "XGBoost": joblib.load("model_weights/XGBoost.pkl")
     }
-    vectorizer = joblib.load("appcon-hackathon/model_weights/content_vectorizer.pkl")
-    brand_columns = joblib.load("appcon-hackathon/model_weights/brand_columns.pkl")
+    vectorizer = joblib.load("model_weights/content_vectorizer.pkl")
+    brand_columns = joblib.load("model_weights/brand_columns.pkl")
     logger.info("Text prediction models and vectorizer loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load text prediction models or vectorizer: {str(e)}")
@@ -35,7 +35,7 @@ except Exception as e:
 
 # Load the pre-trained YOLOv8 model for /process_image endpoint
 try:
-    yolo_model = YOLO('appcon-hackathon/model_weights/yolov8n.pt')  # YOLOv8 model
+    yolo_model = YOLO('model_weights/yolov8n.pt')  # YOLOv8 model
     logger.info("YOLO model for object detection loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load YOLO model for object detection: {str(e)}")
@@ -43,7 +43,7 @@ except Exception as e:
 
 # Load the pre-trained YOLOv8 model for /wound endpoint
 try:
-    wound_model = YOLO('appcon-hackathon/model_weights/best.pt')  # YOLOv8 model for wound detection
+    wound_model = YOLO('model_weights/best.pt')  # YOLOv8 model for wound detection
     logger.info("YOLO model for wound detection loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load YOLO model for wound detection: {str(e)}")
