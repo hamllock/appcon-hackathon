@@ -26,6 +26,7 @@ The backend leverages Python libraries such as NumPy, Pandas, scikit-learn, and 
 - Expo Go app (available on iOS and Android)
 - Git Bash (for Windows users) or a terminal for running commands
 - A device/emulator to run the mobile app
+- Tesseract OCR (for Image OCR functionality)
 
 ## Setup Instructions
 
@@ -38,54 +39,73 @@ Follow these steps to set up the project locally:
    cd <repository-directory>
    ```
 
-2. **Set Up the Python Environment**
+2. **Install Tesseract OCR**
+
+   Tesseract OCR is required for text extraction from images. Install it based on your operating system:
+
+   - **Ubuntu/Debian**:
+     ```bash
+     sudo apt update
+     sudo apt install tesseract-ocr
+     sudo apt install libtesseract-dev
+     ```
+   - **macOS** (using Homebrew):
+     ```bash
+     brew install tesseract
+     ```
+   - **Windows**:
+     - Download and install Tesseract from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki).
+     - Add the Tesseract installation path (e.g., `C:\Program Files\Tesseract-OCR`) to your system’s PATH environment variable.
+     - Verify installation by running:
+       ```bash
+       tesseract --version
+       ```
+
+   Ensure the `pytesseract` Python package is installed (included in `python_requirements.txt`).
+
+3. **Set Up the Python Environment**
 
    - Create a virtual environment:
-
      ```bash
      python -m venv venv
      source venv/bin/activate  # On Windows: venv\Scripts\activate
      ```
 
    - Install required Python packages:
-
      ```bash
      pip install -r python_requirements.txt
      ```
 
-3. **Install Node.js Dependencies**
+4. **Install Node.js Dependencies**
 
    - Navigate to the project root (where `package.json` is located):
-
      ```bash
      npm install
      ```
 
-4. **Install Expo Go**
+5. **Install Expo Go**
 
    - Download and install the **Expo Go** app from the Google Play Store or Apple App Store.
 
-5. **Start the Flask Backend**
+6. **Start the Flask Backend**
 
    - Run the Flask API server:
-
      ```bash
      python allAPI.py
      ```
 
    - Ensure the server is running on `http://192.168.1.4:5000` (update the IP in the React Native components if your local IP differs).
 
-6. **Start the Expo Development Server**
+7. **Start the Expo Development Server**
 
    - In a terminal, run:
-
      ```bash
      npx expo start
      ```
 
    - This will generate a QR code in the terminal.
 
-7. **Run the Mobile App**
+8. **Run the Mobile App**
 
    - Open the **Expo Go** app on your mobile device.
    - Scan the QR code from the terminal using the Expo Go app to launch the application.
@@ -147,6 +167,7 @@ The Flask backend provides the following endpoints:
 - **Expo QR Code Not Scanning**: Ensure your device and computer are on the same Wi-Fi network. Alternatively, use the Expo Go app's "Enter URL manually" option.
 - **Permission Errors**: Grant camera and media library permissions when prompted in the Expo Go app.
 - **Model Loading Errors**: Verify that all model weights (`model_weights/`) and `python_requirements.txt` are correctly set up.
+- **Tesseract OCR Errors**: Ensure Tesseract is installed and added to your system’s PATH. Verify by running `tesseract --version`.
 
 ## Dependencies
 
